@@ -41,11 +41,11 @@ typedef struct {
 
 
 /* Function prototypes */
-void enemy_init(EnemyGrid *grid, int screenWidth, int screenHeight);
-void enemy_update(EnemyGrid *grid);
-void enemy_render(EnemyGrid *grid, SDL_Renderer *renderer);
-int enemy_check_collision(EnemyGrid *grid, int x, int y, int width, int height);
-int enemy_check_reached_bottom(EnemyGrid *grid, int screenHeight);
+void enemy_init(EnemyGrid *grid, int screenWidth, int screenHeight);                /* ---- initialiser les enemies ----*/
+void enemy_update(EnemyGrid *grid);                                                 /* ---- mettre à jour les enemies ---- */
+void enemy_render(EnemyGrid *grid, SDL_Renderer *renderer);                         /* ---- render/images des enemies ----*/
+int enemy_check_collision(EnemyGrid *grid, int x, int y, int width, int height);    /* ---- vérifier la collision des enemies (avec la bordure) ---- */
+int enemy_check_reached_bottom(EnemyGrid *grid, int screenHeight);                  /* ---- vérifier les enemies s'ils atteignent le fond ----*/
 
 
 

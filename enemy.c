@@ -54,6 +54,7 @@ void enemy_init(EnemyGrid *grid, int screenWidth, int screenHeight) {
 
 
 
+/* ---- mettre à jour les enemies ---- */
 void enemy_update(EnemyGrid *grid) {
     Uint32 current_time = SDL_GetTicks();
     
@@ -114,6 +115,7 @@ void enemy_update(EnemyGrid *grid) {
 
 
 
+/* ---- render/images des enemies ----*/
 void enemy_render(EnemyGrid *grid, SDL_Renderer *renderer) {
     for (int i = 0; i < grid->count; i++) {
         if (!grid->enemies[i].alive) continue;
@@ -144,6 +146,7 @@ void enemy_render(EnemyGrid *grid, SDL_Renderer *renderer) {
 
 
 
+/* ---- vérifier la collision des enemies (avec la bordure) ---- */
 int enemy_check_collision(EnemyGrid *grid, int x, int y, int width, int height) {
     for (int i = 0; i < grid->count; i++) {
         if (!grid->enemies[i].alive) continue;
@@ -165,7 +168,7 @@ int enemy_check_collision(EnemyGrid *grid, int x, int y, int width, int height) 
 }
 
 
-
+/* ---- vérifier les enemies s'ils atteignent le fond ----*/
 int enemy_check_reached_bottom(EnemyGrid *grid, int screenHeight) {
     for (int i = 0; i < grid->count; i++) {
         if (!grid->enemies[i].alive) continue;
