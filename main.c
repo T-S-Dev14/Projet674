@@ -7,13 +7,14 @@ int main() {
 
     Game game;
 
-    if (!game_init(&game, "Space Invaders", 800, 600))
+    if (!game_init(&game, "Space Invaders", 800, 600)){
         return 1;
-
+    }
+    
     player_init(&player, 800, 600);
 
+    
     while (game.running) {
-
         game_handle_events(&game);
 
         const Uint8 *keystates = SDL_GetKeyboardState(NULL);
