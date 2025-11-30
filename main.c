@@ -68,7 +68,7 @@ int main() {
         score_render(&score, game.renderer);
 
         // Affichage final
-        SDL_RenderPresent(game.renderer);
+        //SDL_RenderPresent(game.renderer);
 
 
         SDL_Delay(16); // ~60 FPS

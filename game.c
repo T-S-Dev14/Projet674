@@ -1,9 +1,11 @@
 #include "game.h"
 #include "player.h"
 #include "bullet.h"
+#include "score.h"
 
 extern Player player;
 extern Bullet bullets[MAX_BULLETS];
+extern Score score;
 
 
 /* ---- initialisation du jeu ---- */
@@ -75,6 +77,10 @@ void game_render(Game *game) {
 
     /* ---- Dessiner les enemies ----*/
     enemy_render(&game->enemies, game->renderer);
+    bullet_render(bullets, MAX_BULLETS, game->renderer);
+
+    score_render(&score, game->renderer);
+
 
     /* afficher le frame */
     SDL_RenderPresent(game->renderer);
