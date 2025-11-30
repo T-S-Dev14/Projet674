@@ -49,14 +49,29 @@ void game_handle_events(Game *game) {
 
 void game_update(Game *game) {
     // TODO: gestion du joueur, tirs, ennemis, collisions…
+
+
+
+    /* ---- enemy logic ---- */
+    enemy_update(&game->enemies);
+    
+    if (enemy_check_reached_bottom(&game->enemies, 600)) {
+        game->running = 0;  // Game over
+    }
 }
+
 
 void game_render(Game *game) {
     SDL_SetRenderDrawColor(game->renderer, 0, 0, 0, 255);
     SDL_RenderClear(game->renderer);
 
-    // Dessiner le joueur
+
+    /* ----Dessiner le joueur ---- */
     player_render(&player, game->renderer);
+
+    /* ---- Dessiner les enemies ----*/
+    enemy_render(&game->enemies, game->renderer);
+
 
     SDL_RenderPresent(game->renderer);
 }
