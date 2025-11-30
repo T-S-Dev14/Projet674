@@ -1,7 +1,12 @@
 #include "game.h"
 #include "player.h"
+#include "bullet.h"
 
-Player player; // <<< ajouter ici
+Player player; 
+Bullet bullets[MAX_BULLETS];
+
+int previousSpaceState = 0;
+
 
 int main() {
 
@@ -11,6 +16,8 @@ int main() {
         return 1;
 
     player_init(&player, 800, 600);
+    bullet_init(bullets, MAX_BULLETS);
+
 
     while (game.running) {
 
@@ -18,10 +25,27 @@ int main() {
 
         const Uint8 *keystates = SDL_GetKeyboardState(NULL);
         player_update(&player, keystates);
+        // Espace pour tirer
+        int spacePressed = keystates[SDL_SCANCODE_SPACE];
+
+        if (spacePressed && !previousSpaceState) {
+            // Tir au centre du vaisseau
+            bullet_shoot(bullets, MAX_BULLETS, player.x + 18, player.y);
+        }
+
+        previousSpaceState = spacePressed;
 
         game_update(&game);
 
-        game_render(&game);  // Le joueur sera dessiné **dans cette fonction**
+        // Nettoyage + dessin joueur
+        game_render(&game);
+
+        // Dessin bullets
+        bullet_render(bullets, MAX_BULLETS, game.renderer);
+
+        // Affichage final
+        SDL_RenderPresent(game.renderer);
+
 
         SDL_Delay(16); // ~60 FPS
     }
