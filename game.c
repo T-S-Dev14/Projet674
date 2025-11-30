@@ -67,7 +67,6 @@ void game_render(Game *game) {
     // Dessiner les enemis
     enemy_render(&game->enemies, game->renderer);
 
-    
     SDL_RenderPresent(game->renderer);
 }
 
