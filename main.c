@@ -5,6 +5,9 @@
 Player player; 
 Bullet bullets[MAX_BULLETS];
 
+int previousSpaceState = 0;
+
+
 int main() {
 
     Game game;
@@ -23,10 +26,14 @@ int main() {
         const Uint8 *keystates = SDL_GetKeyboardState(NULL);
         player_update(&player, keystates);
         // Espace pour tirer
-        if (keystates[SDL_SCANCODE_SPACE]) {
+        int spacePressed = keystates[SDL_SCANCODE_SPACE];
+
+        if (spacePressed && !previousSpaceState) {
+            // Tir au centre du vaisseau
             bullet_shoot(bullets, MAX_BULLETS, player.x + 18, player.y);
         }
 
+        previousSpaceState = spacePressed;
 
         game_update(&game);
 

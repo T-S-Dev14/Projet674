@@ -34,7 +34,8 @@ void bullet_render(Bullet bullets[], int size, SDL_Renderer *renderer) {
     
     for (int i = 0; i < size; i++) {
         if (bullets[i].active) {
-            SDL_Rect rect = { bullets[i].x, bullets[i].y, 5, 10 };
+            SDL_Rect rect = { bullets[i].x, bullets[i].y, BULLET_WIDTH, BULLET_HEIGHT };
+
             SDL_RenderFillRect(renderer, &rect);
         }
     }

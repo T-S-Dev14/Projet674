@@ -4,6 +4,8 @@
 #include <SDL2/SDL.h>
 
 #define MAX_BULLETS 20
+#define BULLET_WIDTH 3
+#define BULLET_HEIGHT 12
 
 typedef struct {
     int x, y;
