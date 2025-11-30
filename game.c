@@ -1,7 +1,10 @@
 #include "game.h"
 #include "player.h"
+#include "bullet.h"
 
 extern Player player;
+extern Bullet bullets[MAX_BULLETS];
+
 
 /* ---- initialisation du jeu ---- */
 int game_init(Game *game, const char *title, int width, int height) {
@@ -46,16 +49,7 @@ void game_handle_events(Game *game) {
 
 void game_update(Game *game) {
     // TODO: gestion du joueur, tirs, ennemis, collisions…
-
-    /* ---- enemy logic ---- */
-    enemy_update(&game->enemies);
-    
-    if (enemy_check_reached_bottom(&game->enemies, 600)) {
-        game->running = 0;  // Game over
-    }
 }
-
-
 
 void game_render(Game *game) {
     SDL_SetRenderDrawColor(game->renderer, 0, 0, 0, 255);
@@ -63,9 +57,6 @@ void game_render(Game *game) {
 
     // Dessiner le joueur
     player_render(&player, game->renderer);
-
-    // Dessiner les enemis
-    enemy_render(&game->enemies, game->renderer);
 
     SDL_RenderPresent(game->renderer);
 }
