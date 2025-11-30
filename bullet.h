@@ -1,0 +1,19 @@
+#ifndef BULLET_H
+#define BULLET_H
+
+#include <SDL2/SDL.h>
+
+#define MAX_BULLETS 20
+
+typedef struct {
+    int x, y;
+    int active;
+    int speed;
+} Bullet;
+
+void bullet_init(Bullet bullets[], int size);
+void bullet_shoot(Bullet bullets[], int size, int x, int y);
+void bullet_update(Bullet bullets[], int size);
+void bullet_render(Bullet bullets[], int size, SDL_Renderer *renderer);
+
+#endif
