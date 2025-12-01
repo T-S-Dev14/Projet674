@@ -62,16 +62,9 @@ int main() {
 
 
         /* Dessiner les bullets */
-<<<<<<< HEAD
-        bullet_render(bullets, MAX_BULLETS, game.renderer, score.value);
-
-        score_render(&score, game.renderer);
-
-=======
         
->>>>>>> ef83de6 (collision avec les ennemies)
         // Affichage final
-        //DL_RenderPresent(game.renderer);
+        //SDL_RenderPresent(game.renderer);
 
 
         SDL_Delay(16); // ~60 FPS
