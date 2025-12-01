@@ -1,0 +1,27 @@
+# ---------- Fichiers compilés (C / C++) ----------
+*.o
+*.a
+*.so
+*.dll
+*.exe
+*.out
+space_invaders
+
+# ---------- Fichiers temporaires ----------
+*~
+*.swp
+*.tmp
+
+# ---------- Dossiers de build ----------
+build/
+bin/
+
+# ---------- Fichiers VS Code ----------
+.vscode/
+
+# ---------- Fichiers système ----------
+.DS_Store
+Thumbs.db
+
+# ---------- Logs ----------
+*.log
