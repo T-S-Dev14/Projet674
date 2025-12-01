@@ -1,5 +1,4 @@
 #include "player.h"
-#include "sprites.h"
 
 // Déclaration externe du sprite manager global
 extern SpriteManager *g_sprite_manager;
@@ -36,4 +35,13 @@ void player_render(Player *p, SDL_Renderer *renderer) {
         SDL_SetRenderDrawColor(renderer, 0, 255, 0, 255);
         SDL_RenderFillRect(renderer, &rect);
     }
+}
+
+void player_handle_shooting(Player *p, const Uint8 *keys, Bullet bullets[]) {
+    static int prev_space = 0;
+    int space = keys[SDL_SCANCODE_SPACE];
+    if (space && !prev_space) {
+        bullet_shoot(bullets, MAX_BULLETS, p->x + 18, p->y);
+    }
+    prev_space = space;
 }

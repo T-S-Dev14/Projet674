@@ -2,8 +2,14 @@
 #define GAME_H
 
 #include <SDL2/SDL.h>
+#include <SDL2/SDL_image.h>
 #include "enemy.h"
 #include "sprites.h"
+#include "player.h"
+#include "bullet.h"
+#include "score.h"
+
+#define CHEMIN_VERS_SPRITE "assets/sprite.png"
 
 typedef struct {
     SDL_Window *window;

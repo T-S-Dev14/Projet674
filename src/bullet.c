@@ -57,3 +57,45 @@ void bullet_render(Bullet bullets[], int size, SDL_Renderer *renderer, int score
         }
     }
 }
+
+
+/* ---- Vérifier les collisions bullets → ennemis ---- */
+void bullet_check_collisions(Bullet bullets[], int size, EnemyGrid *enemies, Score *score) {
+    for (int i = 0; i < MAX_BULLETS; i++) {
+        if (!bullets[i].active) continue;  // Ignorer les bullets inactives
+        
+        // Vérifier si cette bullet touche un ennemi
+        int hit_index = enemy_check_collision(
+            enemies, 
+            bullets[i].x, 
+            bullets[i].y, 
+            BULLET_WIDTH, 
+            BULLET_HEIGHT
+        );
+        
+        // Si un ennemi a été touché
+        if (hit_index >= 0) {
+            bullets[i].active = 0;                                   // désactiver la bullet
+            EnemyType typeEnemy = enemies->enemies[hit_index].type;  // récupérer le type d'ennemie
+            
+            // ajouter score en fonction du type d'ennemie abbatu.
+            switch (typeEnemy) {
+              case ENEMY_TYPE_1:
+                score_add(score, 10);   // Ennemis du haut = 10 points
+                break;
+
+              case ENEMY_TYPE_2:
+                score_add(score, 20);   // Ennemis du milieu = 20 points
+                break;
+
+              case ENEMY_TYPE_3:
+                score_add(score, 30);   // Ennemis du bas = 30 points
+                break;
+
+              default:
+                // Optionnel : type inconnu, aucune action ou debug
+                break;
+            }
+        }
+    }
+}

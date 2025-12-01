@@ -1,7 +1,5 @@
 #include "sprites.h"
-#include <SDL2/SDL_image.h>
-#include <stdio.h>
-#include <stdlib.h>
+
 
 static void initSprites(Sprite* sprites) {
     // Petits aliens et vaisseau

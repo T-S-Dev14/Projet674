@@ -31,9 +31,9 @@ typedef struct {
     int count;
     int alive_count;
     int direction;      // 1 = right, -1 = left
-    int speed;
     int drop_distance;
-
+    
+    Uint32 speed;
     Uint32 last_move_time;
     Uint32 animation_time;
 } EnemyGrid;

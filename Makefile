@@ -6,10 +6,9 @@ CFLAGS = -Wall -Wextra -O2
 LDFLAGS = $(shell sdl2-config --cflags --libs) -lSDL2_ttf -lSDL2_image 
 
 # Fichiers
-# --- MODIFIER/AJOUTER EN DESSOUS LES NOUVEAUX FICHIERS .c !!!!
-SRC = main.c game.c player.c enemy.c bullet.c score.c sprites.c
-OBJ = $(SRC:.c=.o)
-TARGET = space_invaders
+SRC = $(wildcard src/*.c)
+OBJ = $(patsubst src/%.c, build/%.o, $(SRC))
+TARGET = build/space_invaders
 
 # Règle principale
 all: $(TARGET)
@@ -20,13 +19,15 @@ $(TARGET): $(OBJ)
 	@echo "✓ Compilation réussie! Lance avec: ./$(TARGET)"
 
 # Compilation des .c en .o
-%.o: %.c
+build/%.o: src/%.c
 	$(CC) $(CFLAGS) -c $< -o $@
+
 
 # Nettoyage
 clean:
-	rm -f $(OBJ) $(TARGET)
+	rm -rf build/*
 	@echo "✓ Fichiers nettoyés"
+
 
 # Recompilation complète
 rebuild: clean all

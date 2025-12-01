@@ -2,6 +2,9 @@
 #define SPRITES_H
 
 #include <SDL2/SDL.h>
+#include <SDL2/SDL_image.h>
+#include <stdio.h>
+#include <stdlib.h>
 
 #define SPRITE_SIZE 8
 

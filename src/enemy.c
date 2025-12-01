@@ -1,7 +1,6 @@
 #include "enemy.h"
 #include <string.h>
 
-
 /* GLOBAL VALUES */
 #define ENEMY_WIDTH 30
 #define ENEMY_HEIGHT 20
