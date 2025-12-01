@@ -63,7 +63,7 @@ int main() {
 
 
         /* Dessiner les bullets */
-        bullet_render(bullets, MAX_BULLETS, game.renderer);
+        bullet_render(bullets, MAX_BULLETS, game.renderer, score.value);
 
         score_render(&score, game.renderer);
 
