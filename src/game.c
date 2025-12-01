@@ -36,8 +36,41 @@ int game_init(Game *game, const char *title, int width, int height) {
     
     // Stocker globalement pour y accéder dans player_render
     g_sprite_manager = game->sprite_manager;
+
+    game->current_wave = 1;
+    game->wave_transition = 0;
+    game->wave_transition_time = 0;
+    
+    /* ---- Démarrer la vague  1 --- */
+    game_start_wave(game, 1);
     
     return 1;
+}
+
+void game_start_wave(Game *game, int wave_number) {
+    printf("=== WAVE %d START ===\n", wave_number);
+    
+    // Réinitialiser les ennemis
+    enemy_init(&game->enemies, 800, 600);
+    
+    // Augmenter la difficulté selon la vague
+    // Vague 1: vitesse normale (500ms)
+    // Vague 2: plus rapide (400ms)
+    // Vague 3+: encore plus rapide
+    int base_speed = 500;
+    game->enemies.speed = base_speed - (wave_number - 1) * 100;
+    
+    // Vitesse minimale: 200ms
+    if (game->enemies.speed < 200) {
+        game->enemies.speed = 200;
+    }
+    
+    // Distance de descente augmente avec les vagues
+    game->enemies.drop_distance = 20 + (wave_number - 1) * 5;
+    
+    printf("Speed: %dms, Drop: %dpx\n", 
+           game->enemies.speed, 
+           game->enemies.drop_distance);
 }
 
 /* ---- gérer les événements ----*/
@@ -55,6 +88,18 @@ void game_handle_events(Game *game) {
 
 /* ---- fonction qui met à jour le jeu  ---- */
 void game_update(Game *game) {
+
+    if (game->wave_transition) {
+        Uint32 current_time = SDL_GetTicks();
+        
+        // Attendre 2 secondes avant la prochaine vague
+        if (current_time - game->wave_transition_time > 2000) {
+            game->wave_transition = 0;
+            game_start_wave(game, game->current_wave);
+        }
+        
+        return; // Ne pas mettre à jour le jeu pendant la transition
+    }
     
     /* ---- bullet logic ---- */
     bullet_update(bullets, MAX_BULLETS);
@@ -62,6 +107,14 @@ void game_update(Game *game) {
     
     /* ---- enemy logic ---- */
     enemy_update(&game->enemies);
+
+    if (game->enemies.alive_count == 0) {
+        printf("All enemies destroyed! Starting next wave...\n");
+        game->current_wave++;
+        game->wave_transition = 1;
+        game->wave_transition_time = SDL_GetTicks();
+    }
+
     if (enemy_check_reached_bottom(&game->enemies, 600)) {
         game->running = 0;  // Game over !!!!!
     }
@@ -71,6 +124,23 @@ void game_update(Game *game) {
 void game_render(Game *game) {
     SDL_SetRenderDrawColor(game->renderer, 0, 0, 0, 255);
     SDL_RenderClear(game->renderer);
+
+    if (game->wave_transition) {
+        // Afficher "WAVE X" au centre de l'écran
+        SDL_SetRenderDrawColor(game->renderer, 255, 255, 255, 255);
+        
+        // Message simple en rectangles (temporaire)
+        // Tu pourras améliorer avec SDL_ttf plus tard
+        char wave_text[32];
+        sprintf(wave_text, "WAVE %d", game->current_wave);
+        
+        // Pour l'instant, juste un carré blanc au centre
+        SDL_Rect wave_indicator = {350, 280, 100, 40};
+        SDL_RenderFillRect(game->renderer, &wave_indicator);
+        
+        SDL_RenderPresent(game->renderer);
+        return;
+    }
     
     /* ----Dessiner le joueur ---- */
     player_render(&player, game->renderer);  // PAS DE CHANGEMENT ICI
