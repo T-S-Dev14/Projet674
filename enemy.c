@@ -111,6 +111,8 @@ void enemy_update(EnemyGrid *grid) {
             grid->speed = 400;
         }
     }
+
+    
 }
 
 
