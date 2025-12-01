@@ -87,7 +87,7 @@ void game_render(Game *game) {
     /* ---- Dessiner les enemies ----*/
     enemy_render(&game->enemies, game->renderer);
     
-    bullet_render(bullets, MAX_BULLETS, game->renderer);
+    bullet_render(bullets, MAX_BULLETS, game->renderer, score.value);
     score_render(&score, game->renderer);
     
     /* afficher le frame */
