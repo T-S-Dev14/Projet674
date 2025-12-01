@@ -54,18 +54,14 @@ void game_handle_events(Game *game) {
 }
 
 /* ---- fonction qui met à jour le jeu  ---- */
-/* ---- fonction qui met à jour le jeu  ---- */
 void game_update(Game *game) {
     
     /* ---- bullet logic ---- */
     bullet_update(bullets, MAX_BULLETS);
-
     bullet_check_collisions(bullets, MAX_BULLETS, &game->enemies, &score);  // NOUVEAU
-    
     
     /* ---- enemy logic ---- */
     enemy_update(&game->enemies);
-    
     if (enemy_check_reached_bottom(&game->enemies, 600)) {
         game->running = 0;  // Game over !!!!!
     }
