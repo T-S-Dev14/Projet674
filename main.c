@@ -52,7 +52,6 @@ int main() {
         if (spacePressed && !previousSpaceState) {
             // Tir au centre du vaisseau
             bullet_shoot(bullets, MAX_BULLETS, player.x + 18, player.y);
-            score_add(&score, 1); // TEMPORAIRE pour vérifier
         }
         previousSpaceState = spacePressed;
 
@@ -63,12 +62,16 @@ int main() {
 
 
         /* Dessiner les bullets */
+<<<<<<< HEAD
         bullet_render(bullets, MAX_BULLETS, game.renderer, score.value);
 
         score_render(&score, game.renderer);
 
+=======
+        
+>>>>>>> ef83de6 (collision avec les ennemies)
         // Affichage final
-        //SDL_RenderPresent(game.renderer);
+        //DL_RenderPresent(game.renderer);
 
 
         SDL_Delay(16); // ~60 FPS
