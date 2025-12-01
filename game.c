@@ -62,11 +62,43 @@ void game_handle_events(Game *game) {
 }
 
 /* ---- fonction qui met à jour le jeu  ---- */
+/* ---- fonction qui met à jour le jeu  ---- */
 void game_update(Game *game) {
-    // TODO: gestion du joueur, tirs, ennemis, collisions…
-    
     /* ---- bullet logic ---- */
     bullet_update(bullets, MAX_BULLETS);
+    
+    /* ---- NOUVEAU: Vérifier les collisions bullets → ennemis ---- */
+    for (int i = 0; i < MAX_BULLETS; i++) {
+        if (!bullets[i].active) continue;  // Ignorer les bullets inactives
+        
+        // Vérifier si cette bullet touche un ennemi
+        int hit_index = enemy_check_collision(
+            &game->enemies, 
+            bullets[i].x, 
+            bullets[i].y, 
+            BULLET_WIDTH, 
+            BULLET_HEIGHT
+        );
+        
+        // Si un ennemi a été touché
+        if (hit_index >= 0) {
+            // Désactiver la bullet
+            bullets[i].active = 0;
+            
+            // Ajouter des points selon le type d'ennemi touché
+            Enemy *hit_enemy = &game->enemies.enemies[hit_index];
+            
+            if (hit_enemy->type == ENEMY_TYPE_1) {
+                score_add(&score, 10);  // Ennemis du haut = 10 points
+            } 
+            else if (hit_enemy->type == ENEMY_TYPE_2) {
+                score_add(&score, 20);  // Ennemis du milieu = 20 points
+            } 
+            else if (hit_enemy->type == ENEMY_TYPE_3) {
+                score_add(&score, 30);  // Ennemis du bas = 30 points
+            }
+        }
+    }
     
     /* ---- enemy logic ---- */
     enemy_update(&game->enemies);
