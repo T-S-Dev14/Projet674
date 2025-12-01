@@ -3,11 +3,13 @@
 
 #include <SDL2/SDL.h>
 #include "enemy.h"
+#include "sprites.h"
 
 typedef struct {
     SDL_Window *window;
     SDL_Renderer *renderer;
     int running;
+    SpriteManager *sprite_manager;
 
     EnemyGrid enemies;  
 } Game;
