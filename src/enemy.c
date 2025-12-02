@@ -44,12 +44,30 @@ static void create_enemy(Enemy *e, EnemyType type, int x, int y, float base_spee
             
         // Boss : 40 HP, 100 points, 32x24 sprite échelle 3
         case ENEMY_BOSS:
-            e->max_hp = 40;
-            e->hp = 40;
+            e->max_hp = 60;
+            e->hp = 60;
             e->score_value = 100;
             e->width = 96;   // 32 * 3
             e->height = 72;  // 24 * 3
             e->speed = base_speed * 0.5f;  // Très lent
+            break;
+            
+        case ENEMY_ASTEROID_SMALL:
+            e->max_hp = 20;
+            e->hp = 20;
+            e->score_value = 5;
+            e->width = 24;   // 8 * 3
+            e->height = 24;
+            e->speed = base_speed;  // Très lentes
+            break;
+            
+        case ENEMY_ASTEROID_BIG:
+            e->max_hp = 40;
+            e->hp = 40;
+            e->score_value = 15;
+            e->width = 48;   // 16 * 3
+            e->height = 48;
+            e->speed = base_speed;  // Extrêmement lentes
             break;
     }
 }
@@ -75,6 +93,9 @@ void enemy_start_wave(EnemyGrid *grid, int wave_number) {
     // Vague 1: 10, Vague 2: 15, Vague 3: 20, etc.
     grid->enemies_to_spawn = 5 + (wave_number * 5);
     
+    // Vague 1: 2, Vague 2: 3, Vague 3: 4, etc.
+    grid->asteroids_to_spawn = 1 + wave_number;
+    
     // Délai entre spawns diminue avec les vagues
     // Vague 1: 1000ms, Vague 2: 800ms, Vague 3: 600ms
     grid->spawn_delay = 1200 - (wave_number * 100);
@@ -84,13 +105,17 @@ void enemy_start_wave(EnemyGrid *grid, int wave_number) {
     
     printf("=== WAVE %d START ===\n", wave_number);
     printf("Enemies to spawn: %d\n", grid->enemies_to_spawn);
+    printf("Asteroids to spawn: %d\n", grid->asteroids_to_spawn);
     printf("Spawn delay: %dms\n", grid->spawn_delay);
 }
 
 /* ---- Faire apparaître un ennemi ---- */
 void enemy_spawn_one(EnemyGrid *grid, int screenWidth) {
     if (grid->count >= 100) return;  // Limite max
-    if (grid->enemies_to_spawn <= 0) return;
+    
+    // Vérifier s'il reste des choses à spawner
+    int total_remaining = grid->enemies_to_spawn + grid->asteroids_to_spawn;
+    if (total_remaining <= 0) return;
     
     Enemy *e = &grid->enemies[grid->count];
     
@@ -101,28 +126,51 @@ void enemy_spawn_one(EnemyGrid *grid, int screenWidth) {
     // Vitesse de base augmente avec les vagues
     float base_speed = 0.5f + (grid->wave_number * 0.3f);
     
-    // Choisir un type d'ennemi aléatoire selon la vague
-    EnemyType type;
-    int random = rand() % 100;
+    int spawn_asteroid = 0;
     
-    if (grid->wave_number >= 5 && random < 5) {
-        // 5% de chance de boss à partir de la vague 5
-        type = ENEMY_BOSS;
-    } else if (grid->wave_number >= 3 && random < 30) {
-        // 30% de gros aliens à partir de la vague 3
-        int big_type = rand() % 3;
-        type = ENEMY_BIG_GREEN + big_type;
+    if (grid->asteroids_to_spawn > 0 && grid->enemies_to_spawn > 0) {
+        // Les deux sont disponibles : 30% de chance de météorite
+        spawn_asteroid = (rand() % 100) < 30;
+    } else if (grid->asteroids_to_spawn > 0) {
+        // Plus que des météorites
+        spawn_asteroid = 1;
+    }
+    // Sinon spawn_asteroid reste 0 (ennemi normal)
+    
+    EnemyType type;
+    
+    if (spawn_asteroid) {
+        int asteroid_type = rand() % 100;
+        if (asteroid_type < 40) {
+            type = ENEMY_ASTEROID_SMALL;  // 40% petite
+        } else {
+            type = ENEMY_ASTEROID_BIG;    // 60% grosse
+        }
+        grid->asteroids_to_spawn--;
+        
     } else {
-        // Petits aliens (différentes couleurs)
-        int small_type = rand() % 4;
-        type = ENEMY_SMALL_GREEN + small_type;
+        // Spawner un ennemi normal
+        int random = rand() % 100;
+        
+        if (grid->wave_number >= 5 && random < 5) {
+            // 5% de chance de boss à partir de la vague 5
+            type = ENEMY_BOSS;
+        } else if (grid->wave_number >= 3 && random < 30) {
+            // 30% de gros aliens à partir de la vague 3
+            int big_type = rand() % 3;
+            type = ENEMY_BIG_GREEN + big_type;
+        } else {
+            // Petits aliens (différentes couleurs)
+            int small_type = rand() % 4;
+            type = ENEMY_SMALL_GREEN + small_type;
+        }
+        grid->enemies_to_spawn--;
     }
     
     create_enemy(e, type, x, y, base_speed);
     
     grid->count++;
     grid->alive_count++;
-    grid->enemies_to_spawn--;
 }
 
 /* ---- Mettre à jour les ennemis ---- */
@@ -141,7 +189,7 @@ void enemy_update(EnemyGrid *grid, int screenWidth) {
     }
     
     // Spawn de nouveaux ennemis
-    if (grid->enemies_to_spawn > 0 && 
+    if ((grid->enemies_to_spawn > 0 || grid->asteroids_to_spawn > 0) && 
         current_time - grid->last_spawn_time > grid->spawn_delay) {
         enemy_spawn_one(grid, screenWidth);
         grid->last_spawn_time = current_time;
@@ -187,19 +235,29 @@ void enemy_render(EnemyGrid *grid, SDL_Renderer *renderer) {
                     break;
                 case ENEMY_BIG_GREEN:
                     sprite = GROS_ALIEN_VERT;
-                    scale = 3;  
+                    scale = 3; 
                     break;
                 case ENEMY_BIG_ORANGE:
                     sprite = GROS_ALIEN_ORANGE;
-                    scale = 3;  
+                    scale = 3;
                     break;
                 case ENEMY_BIG_GREY:
                     sprite = GROS_ALIEN_GRIS;
-                    scale = 3;  
+                    scale = 3; 
                     break;
                 case ENEMY_BOSS:
                     sprite = BOSS;
-                    scale = 3;  
+                    scale = 3; 
+                    break;
+                case ENEMY_ASTEROID_SMALL:
+                    // Alterner entre ASTEROID_3 et ASTEROID_4 (8x8)
+                    sprite = (e->sprite_frame == 0) ? ASTEROID_3 : ASTEROID_4;
+                    scale = 3;
+                    break;
+                case ENEMY_ASTEROID_BIG:
+                    // Alterner entre ASTEROID_1 et ASTEROID_2 (16x16)
+                    sprite = (e->sprite_frame == 0) ? ASTEROID_1 : ASTEROID_2;
+                    scale = 3;
                     break;
                 default:
                     sprite = ALIEN_VERT_1;
