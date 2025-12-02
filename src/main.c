@@ -3,6 +3,7 @@
 #include "bullet.h"
 #include "score.h"
 #include "text.h"
+#include "lives.h"
 
 /* === configuration générale === */
 #define CHEMIN_VERS_POLICE "assets/space_invaders.ttf"
@@ -13,6 +14,7 @@
 Score score;                        // score du joueur
 TextJeu textJeu;                    // texte de transition
 Bullet bullets[MAX_BULLETS];        // tableau de munitions
+Lives lives;  
 Player player;                      // joueur principal (EN DERNIER)
 
     
@@ -37,6 +39,8 @@ int main() {
         return 1;
     }
     
+    lives_init(&lives);
+
     /** === initialisation du joueur === */
     player_init(&player, WIDTH, HEIGHT);
 

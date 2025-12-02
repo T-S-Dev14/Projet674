@@ -9,6 +9,7 @@
 #include "bullet.h"
 #include "score.h"
 #include "text.h"
+#include "lives.h"
 
 #define CHEMIN_VERS_SPRITE "assets/sprite.png"
 
