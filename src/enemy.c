@@ -1,60 +1,132 @@
 #include "enemy.h"
 #include <string.h>
+#include <stdlib.h>
+#include <time.h>
 
-/* GLOBAL VALUES */
-#define ENEMY_WIDTH 30
-#define ENEMY_HEIGHT 20
-#define ENEMY_SPACING_X 50
-#define ENEMY_SPACING_Y 40
-#define ENEMY_START_Y 50
-#define ENEMY_MOVE_SPEED 500        // milliseconds between moves
+extern SpriteManager *g_sprite_manager;
+
 #define ENEMY_ANIMATION_SPEED 250
 
-
-
-/* ---- initialiser les enemies ----*/
-void enemy_init(EnemyGrid *grid, int screenWidth, int screenHeight) {
-    memset(grid, 0, sizeof(EnemyGrid));
+/* ---- Fonction helper : créer un ennemi selon son type ---- */
+static void create_enemy(Enemy *e, EnemyType type, int x, int y, float base_speed) {
+    e->x = x;
+    e->y = y;
+    e->alive = 1;
+    e->sprite_frame = 0;
+    e->type = type;
     
-    grid->direction = 1;  // Start moving right
-    grid->speed = ENEMY_MOVE_SPEED;
-    grid->drop_distance = 20;
-    grid->count = 0;
-    grid->alive_count = 0;
-    grid->last_move_time = SDL_GetTicks();
-    grid->animation_time = SDL_GetTicks();
-    
-    // Calculate starting X to center the formation
-    int total_width = 11 * ENEMY_SPACING_X;
-    int start_x = (screenWidth - total_width) / 2;
-    
-    // Create 5 rows x 11 columns
-    for (int row = 0; row < 5; row++) {
-        EnemyType type;
-        
-        // enemies type
-        if (row == 0) type = ENEMY_TYPE_1;
-        else if (row == 4) type = ENEMY_TYPE_3;
-        else type = ENEMY_TYPE_2;
-
-        for (int col = 0; col < 11; col++) {
-            int index = row * 11 + col;
-
-            grid->enemies[index].x = start_x + col * ENEMY_SPACING_X;
-            grid->enemies[index].y = ENEMY_START_Y + row * ENEMY_SPACING_Y;
-            grid->enemies[index].type = type;
-            grid->enemies[index].alive = 1;
-            grid->enemies[index].sprite_frame = 0;
-            grid->count++;
-            grid->alive_count++;
-        }
+    // Définir les caractéristiques selon le type
+    switch (type) {
+        // Petits aliens : 10 HP, 10 points, 8x8 sprite échelle 3
+        case ENEMY_SMALL_GREEN:
+        case ENEMY_SMALL_ORANGE:
+        case ENEMY_SMALL_RED:
+        case ENEMY_SMALL_YELLOW:
+            e->max_hp = 10;
+            e->hp = 10;
+            e->score_value = 10;
+            e->width = 24;   // 8 * 3
+            e->height = 24;
+            e->speed = base_speed;
+            break;
+            
+        // Gros aliens : 20 HP, 30 points, 16x16 sprite échelle 2
+        case ENEMY_BIG_GREEN:
+        case ENEMY_BIG_ORANGE:
+        case ENEMY_BIG_GREY:
+            e->max_hp = 20;
+            e->hp = 20;
+            e->score_value = 30;
+            e->width = 32;   // 16 * 2
+            e->height = 32;
+            e->speed = base_speed * 0.8f;  // Plus lents
+            break;
+            
+        // Boss : 40 HP, 100 points, 32x24 sprite échelle 2
+        case ENEMY_BOSS:
+            e->max_hp = 40;
+            e->hp = 40;
+            e->score_value = 100;
+            e->width = 64;   // 32 * 2
+            e->height = 48;  // 24 * 2
+            e->speed = base_speed * 0.5f;  // Très lent
+            break;
     }
 }
 
+/* ---- Initialiser le système d'ennemis ---- */
+void enemy_init(EnemyGrid *grid, int screenWidth, int screenHeight) {
+    memset(grid, 0, sizeof(EnemyGrid));
+    
+    grid->count = 0;
+    grid->alive_count = 0;
+    grid->wave_number = 0;
+    grid->animation_time = SDL_GetTicks();
+    
+    // Initialiser le générateur aléatoire
+    srand(time(NULL));
+}
 
+/* ---- Démarrer une nouvelle vague ---- */
+void enemy_start_wave(EnemyGrid *grid, int wave_number) {
+    grid->wave_number = wave_number;
+    
+    // Nombre d'ennemis selon la vague
+    // Vague 1: 10, Vague 2: 15, Vague 3: 20, etc.
+    grid->enemies_to_spawn = 5 + (wave_number * 5);
+    
+    // Délai entre spawns diminue avec les vagues
+    // Vague 1: 1000ms, Vague 2: 800ms, Vague 3: 600ms
+    grid->spawn_delay = 1200 - (wave_number * 100);
+    if (grid->spawn_delay < 300) grid->spawn_delay = 300;  // Minimum 300ms
+    
+    grid->last_spawn_time = SDL_GetTicks();
+    
+    printf("=== WAVE %d START ===\n", wave_number);
+    printf("Enemies to spawn: %d\n", grid->enemies_to_spawn);
+    printf("Spawn delay: %dms\n", grid->spawn_delay);
+}
 
-/* ---- mettre à jour les enemies ---- */
-void enemy_update(EnemyGrid *grid) {
+/* ---- Faire apparaître un ennemi ---- */
+void enemy_spawn_one(EnemyGrid *grid, int screenWidth) {
+    if (grid->count >= 100) return;  // Limite max
+    if (grid->enemies_to_spawn <= 0) return;
+    
+    Enemy *e = &grid->enemies[grid->count];
+    
+    // Position X aléatoire en haut de l'écran
+    int x = 50 + (rand() % (screenWidth - 100));
+    int y = -50;  // Commence au-dessus de l'écran
+    
+    // Vitesse de base augmente avec les vagues
+    float base_speed = 1.0f + (grid->wave_number * 0.3f);
+    
+    // Choisir un type d'ennemi aléatoire selon la vague
+    EnemyType type;
+    int random = rand() % 100;
+    
+    if (grid->wave_number >= 5 && random < 5) {
+        // 5% de chance de boss à partir de la vague 5
+        type = ENEMY_BOSS;
+    } else if (grid->wave_number >= 3 && random < 30) {
+        // 30% de gros aliens à partir de la vague 3
+        int big_type = rand() % 3;
+        type = ENEMY_BIG_GREEN + big_type;
+    } else {
+        // Petits aliens (différentes couleurs)
+        int small_type = rand() % 4;
+        type = ENEMY_SMALL_GREEN + small_type;
+    }
+    
+    create_enemy(e, type, x, y, base_speed);
+    
+    grid->count++;
+    grid->alive_count++;
+    grid->enemies_to_spawn--;
+}
+
+/* ---- Mettre à jour les ennemis ---- */
+void enemy_update(EnemyGrid *grid, int screenWidth) {
     Uint32 current_time = SDL_GetTicks();
     
     // Animation
@@ -68,113 +140,139 @@ void enemy_update(EnemyGrid *grid) {
         grid->animation_time = current_time;
     }
     
-    // Movement
-    if (current_time - grid->last_move_time > grid->speed) {
-        int should_drop = 0;
-        int should_reverse = 0;
-        
-        // Check if any enemy hit the edge
-        for (int i = 0; i < grid->count; i++) {
-            if (!grid->enemies[i].alive) continue;
-            
-            int next_x = grid->enemies[i].x + (grid->direction * 10);
-            
-            if (next_x <= 0 || next_x >= 800 - ENEMY_WIDTH) {
-                should_drop = 1;
-                should_reverse = 1;
-                break;
-            }
-        }
-        
-        // Move all enemies
-        for (int i = 0; i < grid->count; i++) {
-            if (!grid->enemies[i].alive) continue;
-            
-            if (should_drop) {
-                grid->enemies[i].y += grid->drop_distance;
-            } else {
-                grid->enemies[i].x += grid->direction * 10;
-            }
-        }
-        
-        if (should_reverse) {
-            grid->direction *= -1;
-        }
-        
-        grid->last_move_time = current_time;
-        
-        // Speed up as enemies are destroyed
-        if (grid->alive_count < 20) {
-            grid->speed = 300;
-        } else if (grid->alive_count < 35) {
-            grid->speed = 400;
-        }
+    // Spawn de nouveaux ennemis
+    if (grid->enemies_to_spawn > 0 && 
+        current_time - grid->last_spawn_time > grid->spawn_delay) {
+        enemy_spawn_one(grid, screenWidth);
+        grid->last_spawn_time = current_time;
     }
-
     
+    // Déplacer tous les ennemis vivants
+    for (int i = 0; i < grid->count; i++) {
+        if (!grid->enemies[i].alive) continue;
+        
+        Enemy *e = &grid->enemies[i];
+        e->y += e->speed;  // Descendre verticalement
+    }
 }
 
-
-
-/* ---- render/images des enemies ----*/
+/* ---- Afficher les ennemis ---- */
 void enemy_render(EnemyGrid *grid, SDL_Renderer *renderer) {
     for (int i = 0; i < grid->count; i++) {
         if (!grid->enemies[i].alive) continue;
         
         Enemy *e = &grid->enemies[i];
         
-        // Choose color based on enemy type
-        if (e->type == ENEMY_TYPE_1) {
-            SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255);  // Red
-        } else if (e->type == ENEMY_TYPE_2) {
-            SDL_SetRenderDrawColor(renderer, 255, 165, 0, 255);  // Orange
+        if (g_sprite_manager) {
+            // Choisir le sprite selon le type et l'animation
+            SpriteID sprite;
+            int scale = 3;  // Par défaut pour petits
+            
+            switch (e->type) {
+                case ENEMY_SMALL_GREEN:
+                    sprite = (e->sprite_frame == 0) ? ALIEN_VERT_1 : ALIEN_VERT_2;
+                    scale = 3;
+                    break;
+                case ENEMY_SMALL_ORANGE:
+                    sprite = (e->sprite_frame == 0) ? ALIEN_ORANGE_1 : ALIEN_ORANGE_2;
+                    scale = 3;
+                    break;
+                case ENEMY_SMALL_RED:
+                    sprite = (e->sprite_frame == 0) ? ALIEN_ROUGE_1 : ALIEN_ROUGE_2;
+                    scale = 3;
+                    break;
+                case ENEMY_SMALL_YELLOW:
+                    sprite = (e->sprite_frame == 0) ? ALIEN_JAUNE_1 : ALIEN_JAUNE_2;
+                    scale = 3;
+                    break;
+                case ENEMY_BIG_GREEN:
+                    sprite = GROS_ALIEN_VERT;
+                    scale = 2;
+                    break;
+                case ENEMY_BIG_ORANGE:
+                    sprite = GROS_ALIEN_ORANGE;
+                    scale = 2;
+                    break;
+                case ENEMY_BIG_GREY:
+                    sprite = GROS_ALIEN_GRIS;
+                    scale = 2;
+                    break;
+                case ENEMY_BOSS:
+                    sprite = BOSS;
+                    scale = 2;
+                    break;
+                default:
+                    sprite = ALIEN_VERT_1;
+                    scale = 3;
+            }
+            
+            renderSprite(g_sprite_manager, renderer, sprite, e->x, e->y, scale);
+            
+            // Afficher une barre de vie si HP < max
+            if (e->hp < e->max_hp) {
+                // Barre de fond (rouge)
+                SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255);
+                SDL_Rect bg = {e->x, e->y - 8, e->width, 4};
+                SDL_RenderFillRect(renderer, &bg);
+                
+                // Barre de vie (vert)
+                SDL_SetRenderDrawColor(renderer, 0, 255, 0, 255);
+                int hp_width = (e->hp * e->width) / e->max_hp;
+                SDL_Rect hp_bar = {e->x, e->y - 8, hp_width, 4};
+                SDL_RenderFillRect(renderer, &hp_bar);
+            }
+            
         } else {
-            SDL_SetRenderDrawColor(renderer, 255, 255, 0, 255);  // Yellow
+            // Fallback: rectangles colorés
+            if (e->type <= ENEMY_SMALL_YELLOW) {
+                SDL_SetRenderDrawColor(renderer, 255, 255, 0, 255);  // Jaune
+            } else if (e->type <= ENEMY_BIG_GREY) {
+                SDL_SetRenderDrawColor(renderer, 255, 165, 0, 255);  // Orange
+            } else {
+                SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255);    // Rouge
+            }
+            
+            SDL_Rect rect = {e->x, e->y, e->width, e->height};
+            SDL_RenderFillRect(renderer, &rect);
         }
-        
-        // Simple animation: change size slightly
-        int offset = e->sprite_frame * 2;
-        SDL_Rect rect = { 
-            e->x + offset, 
-            e->y + offset, 
-            ENEMY_WIDTH - offset * 2, 
-            ENEMY_HEIGHT - offset * 2 
-        };
-        
-        SDL_RenderFillRect(renderer, &rect);
     }
 }
 
-
-
-/* ---- vérifier la collision des enemies (avec la bordure) ---- */
-int enemy_check_collision(EnemyGrid *grid, int x, int y, int width, int height) {
+/* ---- Vérifier collision avec dégâts ---- */
+int enemy_check_collision(EnemyGrid *grid, int x, int y, int width, int height, int damage) {
     for (int i = 0; i < grid->count; i++) {
         if (!grid->enemies[i].alive) continue;
         
         Enemy *e = &grid->enemies[i];
         
         // AABB collision detection
-        if (x < e->x + ENEMY_WIDTH &&
+        if (x < e->x + e->width &&
             x + width > e->x &&
-            y < e->y + ENEMY_HEIGHT &&
+            y < e->y + e->height &&
             y + height > e->y) {
             
-            e->alive = 0;
-            grid->alive_count--;
-            return i;  // Return index of hit enemy
+            // Infliger des dégâts
+            e->hp -= damage;
+            
+            // Mort si HP <= 0
+            if (e->hp <= 0) {
+                e->alive = 0;
+                grid->alive_count--;
+                return e->score_value;  // Retourner le score
+            }
+            
+            return 0;  // Touché mais pas mort
         }
     }
-    return -1;  // No collision
+    return -1;  // Aucune collision
 }
 
-
-/* ---- vérifier les enemies s'ils atteignent le fond ----*/
+/* ---- Vérifier si un ennemi atteint le fond ---- */
 int enemy_check_reached_bottom(EnemyGrid *grid, int screenHeight) {
     for (int i = 0; i < grid->count; i++) {
         if (!grid->enemies[i].alive) continue;
         
-        if (grid->enemies[i].y + ENEMY_HEIGHT >= screenHeight - 60) {
+        if (grid->enemies[i].y >= screenHeight - 60) {
             return 1;  // Game over!
         }
     }

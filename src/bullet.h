@@ -14,10 +14,11 @@ typedef struct {
     int x, y;
     int active;
     int speed;
+    int damage; 
 } Bullet;
 
 void bullet_init(Bullet bullets[], int size);
-void bullet_shoot(Bullet bullets[], int size, int x, int y);
+void bullet_shoot(Bullet bullets[], int size, int x, int y, int damage);
 void bullet_update(Bullet bullets[], int size);
 void bullet_render(Bullet bullets[], int size, SDL_Renderer *renderer, int score_value); 
 void bullet_check_collisions(Bullet bullets[], int size, EnemyGrid *enemies, Score *score);
