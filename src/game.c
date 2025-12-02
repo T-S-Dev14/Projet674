@@ -1,10 +1,12 @@
 #include "game.h"
 #include "text.h"
+#include "lives.h" 
 
 extern Player player;
 extern Bullet bullets[MAX_BULLETS];
 extern Score score;
 extern TextJeu textJeu;
+extern Lives lives;  
 
 // Variable globale pour accéder au sprite manager partout
 SpriteManager *g_sprite_manager = NULL;
@@ -93,7 +95,13 @@ void game_update(Game *game) {
     /* ---- enemy logic ---- */
     enemy_update(&game->enemies, 800);
 
-    // Vérifier que TOUS les ennemis ET météorites sont détruits/spawnés
+    if (lives_check_danger(&lives, &game->enemies, 600)) {
+        printf("GAME OVER! No more lives!\n");
+        game->running = 0;
+        return;
+    }
+
+    // Vérifier si tous les ennemis ET météorites sont détruits/spawnés
     if (game->enemies.alive_count == 0 && 
         game->enemies.enemies_to_spawn == 0 && 
         game->enemies.asteroids_to_spawn == 0) {
@@ -103,13 +111,7 @@ void game_update(Game *game) {
         game->wave_transition = 1;
         game->wave_transition_time = SDL_GetTicks();
         sprintf(textJeu.TextPrint, "WAVE %d", game->current_wave);
-        game->current_wave++;  // ← Maintenant on incrémente APRÈS
-    }
-
-    // Game over si un ennemi atteint le fond
-    if (enemy_check_reached_bottom(&game->enemies, 600)) {
-        printf("GAME OVER! Enemies reached the bottom!\n");
-        game->running = 0;
+        game->current_wave++;
     }
 }
 
@@ -135,6 +137,9 @@ void game_render(Game *game) {
 
     /* ---- Afficher le score  ----*/
     score_render(&score, game->renderer);
+
+    /* ---- Afficher les vies et warning ---- */
+    lives_render(&lives, game->renderer);
     
     /* afficher le frame */
     SDL_RenderPresent(game->renderer);
