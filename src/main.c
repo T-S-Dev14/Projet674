@@ -11,44 +11,40 @@
 
 /** === objets partagés / globaux === */
 Score score;                        // score du joueur
-Player player;                      // joueur principal
+TextJeu textJeu;                    // texte de transition
 Bullet bullets[MAX_BULLETS];        // tableau de munitions
-TextJeu textJeu;
-
-int previousSpaceState = 0;         // état précédent de la touche ESPACE
+Player player;                      // joueur principal (EN DERNIER)
 
     
 int main() {
-
     Game game;
-    score.value = 0;
-
+    
     /** === initialisation du jeu === */
     if (!game_init(&game, "Space Invaders", WIDTH, HEIGHT)){
         return 1;
     }
 
-    
+    /** === initialisation du score === */
+    if (!score_init(&score, CHEMIN_VERS_POLICE, 24)) {
+        printf("Erreur chargement de la police pour score\n");
+        return 1;
+    }
+    score.value = 0;  
+
+    /** === initialisation du texte === */
+    if (!text_init(&textJeu, CHEMIN_VERS_POLICE, 24)) {
+        printf("Erreur chargement de la police pour texte\n");
+        return 1;
+    }
     
     /** === initialisation du joueur === */
     player_init(&player, WIDTH, HEIGHT);
 
-    /** === init enemies (spaces invaders arghhh watch out, here they come!!!!) === */
+    /** === init enemies === */
     enemy_init(&game.enemies, WIDTH, HEIGHT);
     
     /** === initialisation des munitions === */
     bullet_init(bullets, MAX_BULLETS);
-
-    /** === initialisation du score === */
-    if (!score_init(&score, CHEMIN_VERS_POLICE, 24)) {
-        printf("Erreur chargement de la police\n");
-        return 1;
-    }
-
-    if (!text_init(&textJeu, CHEMIN_VERS_POLICE, 24)) {
-        printf("Erreur chargement de la police\n");
-        return 1;
-    }
 
     /** === BOUCLE DE JEU PRINCIPAL === */
     while (game.running) {
@@ -65,21 +61,20 @@ int main() {
         /** --- gestion de tir du joueur --- */
         player_handle_shooting(&player, keystates, bullets);
 
-
-
         /** --- mise à jour globale du jeu --- */
         game_update(&game);
 
         /** --- rendu graphique (joueur, ennemis, tirs, score) --- */
-        game_render(&game);  // Le joueur sera dessiné **dans cette fonction**
+        game_render(&game);
 
         /** --- régulation de la vitesse du jeu --- */
         SDL_Delay(16); // ~60 FPS
     }
 
      /** === nettoyage avant fermeture === */
-    game_cleanup(&game);
+    score_cleanup(&score);
     text_cleanup(&textJeu);
+    game_cleanup(&game);
 
     return 0;
 }

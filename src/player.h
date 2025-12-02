@@ -9,6 +9,8 @@ typedef struct {
     int x, y;
     int speed;
     SpriteID current_sprite;
+    int flame_frame;    // 0 → FLAMME_1, 1 → FLAMME_2, 2 → FLAMME_3
+    int flame_timer; 
 } Player;
 
 
