@@ -17,6 +17,6 @@ typedef struct {
 void player_init(Player *p, int screenWidth, int screenHeight);
 void player_update(Player *p, const Uint8 *keystates);
 void player_render(Player *p, SDL_Renderer *renderer);
-void player_handle_shooting(Player *p, const Uint8 *keys, Bullet bullets[]);
+void player_handle_shooting(Player *p, const Uint8 *keys, Bullet bullets[], int score);
 
 #endif

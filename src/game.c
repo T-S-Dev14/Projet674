@@ -95,10 +95,10 @@ void game_update(Game *game) {
 
     if (game->enemies.alive_count == 0 && game->enemies.enemies_to_spawn == 0) {
         printf("All enemies destroyed! Starting next wave...\n");
-        game->current_wave++;
         game->wave_transition = 1;
         game->wave_transition_time = SDL_GetTicks();
         sprintf(textJeu.TextPrint, "WAVE %d", game->current_wave);
+        game->current_wave++;
     }
 
     // Game over si un ennemi atteint le fond
