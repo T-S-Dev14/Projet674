@@ -13,7 +13,9 @@ typedef enum {
     ENEMY_BIG_GREEN,          // Gros aliens (20 HP, 30 points)
     ENEMY_BIG_ORANGE,
     ENEMY_BIG_GREY,
-    ENEMY_BOSS                // Boss (40 HP, 100 points)
+    ENEMY_BOSS,               // Boss (40 HP, 100 points)
+    ENEMY_ASTEROID_SMALL,     // Petite météorite (15 HP, 5 points)
+    ENEMY_ASTEROID_BIG        // Grosse météorite (30 HP, 15 points)
 } EnemyType;
 
 /* ---- Individual enemy structure ---- */ 
@@ -43,6 +45,7 @@ typedef struct {
     
     int wave_number;       // Numéro de la vague actuelle
     int enemies_to_spawn;  // Ennemis restants à faire apparaître
+    int asteroids_to_spawn ;
     
     Uint32 last_spawn_time;    // Dernier spawn
     Uint32 spawn_delay;        // Délai entre chaque spawn (ms)

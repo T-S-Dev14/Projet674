@@ -93,12 +93,17 @@ void game_update(Game *game) {
     /* ---- enemy logic ---- */
     enemy_update(&game->enemies, 800);
 
-    if (game->enemies.alive_count == 0 && game->enemies.enemies_to_spawn == 0) {
+    // Vérifier que TOUS les ennemis ET météorites sont détruits/spawnés
+    if (game->enemies.alive_count == 0 && 
+        game->enemies.enemies_to_spawn == 0 && 
+        game->enemies.asteroids_to_spawn == 0) {
         printf("All enemies destroyed! Starting next wave...\n");
+        
+        // Afficher "WAVE X" AVANT d'incrémenter
         game->wave_transition = 1;
         game->wave_transition_time = SDL_GetTicks();
         sprintf(textJeu.TextPrint, "WAVE %d", game->current_wave);
-        game->current_wave++;
+        game->current_wave++;  // ← Maintenant on incrémente APRÈS
     }
 
     // Game over si un ennemi atteint le fond
