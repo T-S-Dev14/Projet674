@@ -2,6 +2,7 @@
 #include "player.h"
 #include "bullet.h"
 #include "score.h"
+#include "text.h"
 
 /* === configuration générale === */
 #define CHEMIN_VERS_POLICE "assets/space_invaders.ttf"
@@ -12,6 +13,7 @@
 Score score;                        // score du joueur
 Player player;                      // joueur principal
 Bullet bullets[MAX_BULLETS];        // tableau de munitions
+TextJeu textJeu;
 
 int previousSpaceState = 0;         // état précédent de la touche ESPACE
 
@@ -25,6 +27,8 @@ int main() {
     if (!game_init(&game, "Space Invaders", WIDTH, HEIGHT)){
         return 1;
     }
+
+    
     
     /** === initialisation du joueur === */
     player_init(&player, WIDTH, HEIGHT);
@@ -41,6 +45,10 @@ int main() {
         return 1;
     }
 
+    if (!text_init(&textJeu, CHEMIN_VERS_POLICE, 24)) {
+        printf("Erreur chargement de la police\n");
+        return 1;
+    }
 
     /** === BOUCLE DE JEU PRINCIPAL === */
     while (game.running) {
@@ -71,6 +79,7 @@ int main() {
 
      /** === nettoyage avant fermeture === */
     game_cleanup(&game);
+    text_cleanup(&textJeu);
 
     return 0;
 }
