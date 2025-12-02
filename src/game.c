@@ -1,8 +1,10 @@
 #include "game.h"
+#include "text.h"
 
 extern Player player;
 extern Bullet bullets[MAX_BULLETS];
 extern Score score;
+extern TextJeu textJeu;
 
 // Variable globale pour accéder au sprite manager partout
 SpriteManager *g_sprite_manager = NULL;
@@ -95,6 +97,7 @@ void game_update(Game *game) {
         // Attendre 2 secondes avant la prochaine vague
         if (current_time - game->wave_transition_time > 2000) {
             game->wave_transition = 0;
+            text_clear(&textJeu);  // ← Nettoyer le texte après la transition
             game_start_wave(game, game->current_wave);
         }
         
@@ -113,6 +116,8 @@ void game_update(Game *game) {
         game->current_wave++;
         game->wave_transition = 1;
         game->wave_transition_time = SDL_GetTicks();
+        sprintf(textJeu.TextPrint, "WAVE %d", game->current_wave);
+        
     }
 
     if (enemy_check_reached_bottom(&game->enemies, 600)) {
@@ -126,18 +131,7 @@ void game_render(Game *game) {
     SDL_RenderClear(game->renderer);
 
     if (game->wave_transition) {
-        // Afficher "WAVE X" au centre de l'écran
-        SDL_SetRenderDrawColor(game->renderer, 255, 255, 255, 255);
-        
-        // Message simple en rectangles (temporaire)
-        // Tu pourras améliorer avec SDL_ttf plus tard
-        char wave_text[32];
-        sprintf(wave_text, "WAVE %d", game->current_wave);
-        
-        // Pour l'instant, juste un carré blanc au centre
-        SDL_Rect wave_indicator = {350, 280, 100, 40};
-        SDL_RenderFillRect(game->renderer, &wave_indicator);
-        
+        text_render(&textJeu, game->renderer);
         SDL_RenderPresent(game->renderer);
         return;
     }
@@ -153,6 +147,7 @@ void game_render(Game *game) {
 
     /* ---- Afficher le score  ----*/
     score_render(&score, game->renderer);
+
     
     /* afficher le frame */
     SDL_RenderPresent(game->renderer);

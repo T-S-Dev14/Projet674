@@ -8,6 +8,7 @@
 #include "player.h"
 #include "bullet.h"
 #include "score.h"
+#include "text.h"
 
 #define CHEMIN_VERS_SPRITE "assets/sprite.png"
 
