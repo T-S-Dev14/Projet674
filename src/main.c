@@ -59,7 +59,7 @@ int main() {
         player_update(&player, keystates);
 
         /** --- gestion de tir du joueur --- */
-        player_handle_shooting(&player, keystates, bullets);
+        player_handle_shooting(&player, keystates, bullets, score.value);
 
         /** --- mise à jour globale du jeu --- */
         game_update(&game);

@@ -30,25 +30,25 @@ static void create_enemy(Enemy *e, EnemyType type, int x, int y, float base_spee
             e->speed = base_speed;
             break;
             
-        // Gros aliens : 20 HP, 30 points, 16x16 sprite échelle 2
+        // Gros aliens : 20 HP, 30 points, 16x16 sprite échelle 3
         case ENEMY_BIG_GREEN:
         case ENEMY_BIG_ORANGE:
         case ENEMY_BIG_GREY:
             e->max_hp = 20;
             e->hp = 20;
             e->score_value = 30;
-            e->width = 32;   // 16 * 2
-            e->height = 32;
+            e->width = 48;   // 16 * 3
+            e->height = 48;
             e->speed = base_speed * 0.8f;  // Plus lents
             break;
             
-        // Boss : 40 HP, 100 points, 32x24 sprite échelle 2
+        // Boss : 40 HP, 100 points, 32x24 sprite échelle 3
         case ENEMY_BOSS:
             e->max_hp = 40;
             e->hp = 40;
             e->score_value = 100;
-            e->width = 64;   // 32 * 2
-            e->height = 48;  // 24 * 2
+            e->width = 96;   // 32 * 3
+            e->height = 72;  // 24 * 3
             e->speed = base_speed * 0.5f;  // Très lent
             break;
     }
@@ -99,7 +99,7 @@ void enemy_spawn_one(EnemyGrid *grid, int screenWidth) {
     int y = -50;  // Commence au-dessus de l'écran
     
     // Vitesse de base augmente avec les vagues
-    float base_speed = 1.0f + (grid->wave_number * 0.3f);
+    float base_speed = 0.5f + (grid->wave_number * 0.3f);
     
     // Choisir un type d'ennemi aléatoire selon la vague
     EnemyType type;
@@ -187,19 +187,19 @@ void enemy_render(EnemyGrid *grid, SDL_Renderer *renderer) {
                     break;
                 case ENEMY_BIG_GREEN:
                     sprite = GROS_ALIEN_VERT;
-                    scale = 2;
+                    scale = 3;  
                     break;
                 case ENEMY_BIG_ORANGE:
                     sprite = GROS_ALIEN_ORANGE;
-                    scale = 2;
+                    scale = 3;  
                     break;
                 case ENEMY_BIG_GREY:
                     sprite = GROS_ALIEN_GRIS;
-                    scale = 2;
+                    scale = 3;  
                     break;
                 case ENEMY_BOSS:
                     sprite = BOSS;
-                    scale = 2;
+                    scale = 3;  
                     break;
                 default:
                     sprite = ALIEN_VERT_1;
@@ -208,18 +208,26 @@ void enemy_render(EnemyGrid *grid, SDL_Renderer *renderer) {
             
             renderSprite(g_sprite_manager, renderer, sprite, e->x, e->y, scale);
             
-            // Afficher une barre de vie si HP < max
             if (e->hp < e->max_hp) {
+                int bar_width = e->width;
+                int bar_height = 6;  // Barre plus épaisse
+                int bar_x = e->x;
+                int bar_y = e->y - 10;  // 10px au-dessus
+                
                 // Barre de fond (rouge)
                 SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255);
-                SDL_Rect bg = {e->x, e->y - 8, e->width, 4};
+                SDL_Rect bg = {bar_x, bar_y, bar_width, bar_height};
                 SDL_RenderFillRect(renderer, &bg);
                 
                 // Barre de vie (vert)
                 SDL_SetRenderDrawColor(renderer, 0, 255, 0, 255);
-                int hp_width = (e->hp * e->width) / e->max_hp;
-                SDL_Rect hp_bar = {e->x, e->y - 8, hp_width, 4};
+                int hp_width = (e->hp * bar_width) / e->max_hp;
+                SDL_Rect hp_bar = {bar_x, bar_y, hp_width, bar_height};
                 SDL_RenderFillRect(renderer, &hp_bar);
+                
+                // Contour noir pour mieux voir
+                SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
+                SDL_RenderDrawRect(renderer, &bg);
             }
             
         } else {
