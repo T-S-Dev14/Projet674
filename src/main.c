@@ -4,6 +4,7 @@
 #include "score.h"
 #include "text.h"
 #include "lives.h"
+#include "pickup.h"
 
 /* === configuration générale === */
 #define CHEMIN_VERS_POLICE "assets/space_invaders.ttf"

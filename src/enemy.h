@@ -6,50 +6,56 @@
 
 /* ---- Enemy types basés sur les sprites ---- */
 typedef enum {
-    ENEMY_SMALL_GREEN = 0,    // Petits aliens (10 HP, 10 points)
+    ENEMY_SMALL_GREEN = 0,
     ENEMY_SMALL_ORANGE,
     ENEMY_SMALL_RED,
     ENEMY_SMALL_YELLOW,
-    ENEMY_BIG_GREEN,          // Gros aliens (20 HP, 30 points)
+    ENEMY_BIG_GREEN,
     ENEMY_BIG_ORANGE,
     ENEMY_BIG_GREY,
-    ENEMY_BOSS,               // Boss (40 HP, 100 points)
-    ENEMY_ASTEROID_SMALL,     // Petite météorite (15 HP, 5 points)
-    ENEMY_ASTEROID_BIG        // Grosse météorite (30 HP, 15 points)
+    ENEMY_BOSS,
+    ENEMY_ASTEROID_SMALL,
+    ENEMY_ASTEROID_BIG
 } EnemyType;
 
 /* ---- Individual enemy structure ---- */ 
 typedef struct {
     int x;
     int y;
-    float speed;           // Vitesse de descente (pixels/frame)
+    float speed;
     
     int alive;
-    int hp;                // Points de vie actuels
-    int max_hp;            // Points de vie maximum
-    int score_value;       // Points donnés quand détruit
+    int hp;
+    int max_hp;
+    int score_value;
     
-    int sprite_frame;      // Pour animation (0 ou 1)
+    int sprite_frame;
     EnemyType type;
     
-    int width;             // Largeur de la hitbox
-    int height;            // Hauteur de la hitbox
+    int width;
+    int height;
 } Enemy;
 
 /* ---- Enemy manager ---- */ 
 typedef struct {
-    Enemy enemies[100];    // Maximum 100 ennemis à l'écran
+    Enemy enemies[100];
     
-    int count;             // Nombre total d'ennemis créés
-    int alive_count;       // Nombre d'ennemis vivants
+    int count;
+    int alive_count;
     
-    int wave_number;       // Numéro de la vague actuelle
-    int enemies_to_spawn;  // Ennemis restants à faire apparaître
-    int asteroids_to_spawn ;
+    int wave_number;
+    int enemies_to_spawn;
+    int asteroids_to_spawn;
     
-    Uint32 last_spawn_time;    // Dernier spawn
-    Uint32 spawn_delay;        // Délai entre chaque spawn (ms)
-    Uint32 animation_time;     // Timer pour animation
+    Uint32 last_spawn_time;
+    Uint32 spawn_delay;
+    Uint32 animation_time;
+    
+    // NOUVEAU : Pour spawn de pickups
+    int has_pending_pickup;
+    int pending_pickup_x;
+    int pending_pickup_y;
+    int pending_pickup_type;  // On utilise int au lieu de PickupType pour éviter la dépendance
 } EnemyGrid;
 
 /* Function prototypes */

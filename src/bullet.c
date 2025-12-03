@@ -1,4 +1,6 @@
 #include "bullet.h"
+#include "sprites.h"
+#include <stdio.h>
 
 // Déclaration externe du sprite manager global
 extern SpriteManager *g_sprite_manager;
@@ -33,15 +35,21 @@ void bullet_update(Bullet bullets[], int size) {
     }
 }
 
-void bullet_render(Bullet bullets[], int size, SDL_Renderer *renderer, int score_value) {
-    // Déterminer quel sprite utiliser selon le score
+void bullet_render(Bullet bullets[], int size, SDL_Renderer *renderer, int bullet_level) {
+    // Déterminer quel sprite utiliser selon bullet_level
     SpriteID bullet_sprite;
-    if (score_value >= 50) {
-        bullet_sprite = BALLES_3;
-    } else if (score_value >= 25) {
-        bullet_sprite = BALLES_2;
-    } else {
-        bullet_sprite = BALLES_1;
+    switch (bullet_level) {
+        case 0:
+            bullet_sprite = BALLES_1;
+            break;
+        case 1:
+            bullet_sprite = BALLES_2;
+            break;
+        case 2:
+            bullet_sprite = BALLES_3;
+            break;
+        default:
+            bullet_sprite = BALLES_1;
     }
     
     for (int i = 0; i < size; i++) {
@@ -60,7 +68,7 @@ void bullet_render(Bullet bullets[], int size, SDL_Renderer *renderer, int score
 
 /* ---- Vérifier les collisions bullets → ennemis ---- */
 void bullet_check_collisions(Bullet bullets[], int size, EnemyGrid *enemies, Score *score) {
-    for (int i = 0; i < MAX_BULLETS; i++) {
+    for (int i = 0; i < size; i++) {
         if (!bullets[i].active) continue;
         
         int result = enemy_check_collision(
@@ -80,4 +88,6 @@ void bullet_check_collisions(Bullet bullets[], int size, EnemyGrid *enemies, Sco
             }
         }
     }
+    
+    (void)size; // Éviter le warning unused parameter
 }
