@@ -1,4 +1,5 @@
 #include "enemy.h"
+#include "pickup.h"
 #include <string.h>
 #include <stdlib.h>
 #include <time.h>
@@ -83,6 +84,9 @@ void enemy_init(EnemyGrid *grid, int screenWidth, int screenHeight) {
     
     // Initialiser le générateur aléatoire
     srand(time(NULL));
+    
+    (void)screenWidth;
+    (void)screenHeight;
 }
 
 /* ---- Démarrer une nouvelle vague ---- */
@@ -324,6 +328,42 @@ int enemy_check_collision(EnemyGrid *grid, int x, int y, int width, int height, 
             if (e->hp <= 0) {
                 e->alive = 0;
                 grid->alive_count--;
+                
+                // NOUVEAU : Spawn de pickups
+                int random = rand() % 100;
+                
+                if (random < 10) {
+                    // 10% : Pièce
+                    int coin = (rand() % 2 == 0) ? PICKUP_COIN_GREEN : PICKUP_COIN_YELLOW;
+                    grid->pending_pickup_x = e->x + e->width / 2;
+                    grid->pending_pickup_y = e->y;
+                    grid->pending_pickup_type = coin;
+                    grid->has_pending_pickup = 1;
+                } else if (random < 25) {
+                    // 15% : Bonus ou malus
+                    int bonus_random = rand() % 100;
+                    int bonus;
+                    
+                    if (bonus_random < 20) {
+                        bonus = PICKUP_BONUS_HEART;      // 20% coeur
+                    } else if (bonus_random < 40) {
+                        bonus = PICKUP_BONUS_GREEN;      // 20% balles
+                    } else if (bonus_random < 55) {
+                        bonus = PICKUP_BONUS_BLUE;       // 15% vitesse
+                    } else if (bonus_random < 70) {
+                        bonus = PICKUP_BONUS_ORANGE;     // 15% ralentir ennemis
+                    } else if (bonus_random < 85) {
+                        bonus = PICKUP_BONUS_BROWN;      // 15% MALUS lenteur
+                    } else {
+                        bonus = PICKUP_BOMB;             // 15% MALUS bombe
+                    }
+                    
+                    grid->pending_pickup_x = e->x + e->width / 2;
+                    grid->pending_pickup_y = e->y;
+                    grid->pending_pickup_type = bonus;
+                    grid->has_pending_pickup = 1;
+                }
+                
                 return e->score_value;  // Retourner le score
             }
             

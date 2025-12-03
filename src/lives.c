@@ -2,6 +2,7 @@
 
 extern SpriteManager *g_sprite_manager;
 
+
 /* ---- Initialiser le système de vies ---- */
 void lives_init(Lives *lives) {
     lives->current_lives = MAX_LIVES;

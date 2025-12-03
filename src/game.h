@@ -10,6 +10,7 @@
 #include "score.h"
 #include "text.h"
 #include "lives.h"
+#include "pickup.h"
 
 #define CHEMIN_VERS_SPRITE "assets/sprite.png"
 
@@ -24,6 +25,7 @@ typedef struct {
     int current_wave;           // Numéro de la vague actuelle
     int wave_transition;        // 1 si on est entre deux vague
     Uint32 wave_transition_time; // Temps de début de la transition
+    PickupManager pickups;
 } Game;
 
 

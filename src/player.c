@@ -1,4 +1,7 @@
 #include "player.h"
+#include "bullet.h"
+#include "pickup.h"
+#include "lives.h"
 
 // Déclaration externe du sprite manager global
 extern SpriteManager *g_sprite_manager;
@@ -10,29 +13,52 @@ void player_init(Player *p, int screenWidth, int screenHeight) {
     p->current_sprite = VAISSEAU_1;
     p->flame_frame = 0;
     p->flame_timer = 0;
+    
+    // NOUVEAU
+    p->bullet_level = 0;
+    p->speed_multiplier = 1.0f;
+    p->speed_bonus_end = 0;
+    p->slow_debuff_end = 0;
 }
 
 void player_update(Player *p, const Uint8 *keystates) {
+    // Gérer les effets temporaires
+    Uint32 current_time = SDL_GetTicks();
+    
+    if (current_time > p->speed_bonus_end) {
+        p->speed_multiplier = 1.0f;
+    }
+    if (current_time > p->slow_debuff_end) {
+        p->speed_multiplier = 1.0f;
+    }
+    
+    // Vitesse effective
+    int effective_speed = (int)(p->speed * p->speed_multiplier);
+    
     // Changer le sprite selon la direction
     if (keystates[SDL_SCANCODE_LEFT]) {
-        p->x -= p->speed;
-        p->current_sprite = VAISSEAU_2;  // Sprite gauche
+        p->x -= effective_speed;
+        p->current_sprite = VAISSEAU_2;
     }
     else if (keystates[SDL_SCANCODE_RIGHT]) {
-        p->x += p->speed;
-        p->current_sprite = VAISSEAU_3;  // Sprite droite
+        p->x += effective_speed;
+        p->current_sprite = VAISSEAU_3;
     }
     else {
-        p->current_sprite = VAISSEAU_1;  // Sprite neutre
+        p->current_sprite = VAISSEAU_1;
     }
+    
+    // Limiter aux bords
+    if (p->x < 0) p->x = 0;
+    if (p->x > 776) p->x = 776; // 800 - 24
 
-    // ---------- Animation de la flamme ----------
+    // Animation de la flamme
     p->flame_timer++;
     if (p->flame_timer >= 10) {
         p->flame_frame = (p->flame_frame + 1) % 3;
         p->flame_timer = 0;
     }
-} 
+}
 
 void player_render(Player *p, SDL_Renderer *renderer) {
     if (g_sprite_manager) {
@@ -64,16 +90,76 @@ void player_handle_shooting(Player *p, const Uint8 *keys, Bullet bullets[], int 
     
     if (space && !prev_space) {
         int damage;
-        if (score >= 50) {
-            damage = 10;  // BALLES_3 : 30 dégâts
-        } else if (score >= 25) {
-            damage = 8;  // BALLES_2 : 20 dégâts
-        } else {
-            damage = 5;  // BALLES_1 : 10 dégâts
+        
+        // Dégâts basés sur bullet_level au lieu du score
+        switch (p->bullet_level) {
+            case 0:
+                damage = 5;  // BALLES_1
+                break;
+            case 1:
+                damage = 8;  // BALLES_2
+                break;
+            case 2:
+                damage = 10; // BALLES_3
+                break;
+            default:
+                damage = 5;
         }
         
         bullet_shoot(bullets, MAX_BULLETS, p->x + 4, p->y, damage);
     }
     
     prev_space = space;
+}
+
+void player_apply_bonus(Player *p, int bonus_type, Lives *lives) {
+    Uint32 current_time = SDL_GetTicks();
+    
+    switch (bonus_type) {
+        case PICKUP_BONUS_HEART:
+            // +1 vie (max 3)
+            if (lives->current_lives < lives->max_lives) {
+                lives->current_lives++;
+                printf("Bonus coeur ! Vies: %d\n", lives->current_lives);
+            }
+            break;
+            
+        case PICKUP_BONUS_GREEN:
+            // Améliorer les balles (max niveau 2)
+            if (p->bullet_level < 2) {
+                p->bullet_level++;
+                printf("Balles améliorées ! Niveau: %d\n", p->bullet_level);
+            }
+            break;
+            
+        case PICKUP_BONUS_BLUE:
+            // Vitesse x1.5 pendant 5 secondes
+            p->speed_multiplier = 1.5f;
+            p->speed_bonus_end = current_time + 5000;
+            p->slow_debuff_end = 0;  // Annule le malus
+            printf("Speed boost activé !\n");
+            break;
+            
+        case PICKUP_BONUS_ORANGE:
+            // Ralentir ennemis (géré dans enemy.c)
+            printf("Ralentissement ennemis activé !\n");
+            break;
+            
+        case PICKUP_BONUS_BROWN:
+            // MALUS: Vitesse x0.5 pendant 3 secondes
+            p->speed_multiplier = 0.5f;
+            p->slow_debuff_end = current_time + 3000;
+            p->speed_bonus_end = 0;  // Annule le bonus
+            printf("MALUS: Ralenti !\n");
+            break;
+            
+        case PICKUP_BOMB:
+            // MALUS: -1 vie
+            lives_lose_one(lives);
+            printf("BOMBE ! Vie perdue !\n");
+            break;
+            
+        default:
+            break;
+    }
 }

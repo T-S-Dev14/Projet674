@@ -52,6 +52,7 @@ int game_init(Game *game, const char *title, int width, int height) {
 void game_start_wave(Game *game, int wave_number) {
     printf("=== WAVE %d START ===\n", wave_number);
     
+    pickup_init(&game->pickups);
     // Réinitialiser le système d'ennemis
     enemy_init(&game->enemies, 800, 600);
     
@@ -91,6 +92,33 @@ void game_update(Game *game) {
     /* ---- bullet logic ---- */
     bullet_update(bullets, MAX_BULLETS);
     bullet_check_collisions(bullets, MAX_BULLETS, &game->enemies, &score);
+    /* ---- Vérifier si un ennemi a dropé un pickup ---- */
+    if (game->enemies.has_pending_pickup) {
+        pickup_spawn(&game->pickups, 
+                    game->enemies.pending_pickup_x, 
+                    game->enemies.pending_pickup_y,
+                    game->enemies.pending_pickup_type);
+        game->enemies.has_pending_pickup = 0;
+    }
+
+    /* ---- Mettre à jour les pickups ---- */
+    pickup_update(&game->pickups);
+
+    /* ---- Vérifier collisions joueur <-> pickups ---- */
+    int pickup_result = pickup_check_collision(&game->pickups, &player);
+    if (pickup_result >= 0) {
+        // C'est une pièce ?
+        if (pickup_result == PICKUP_COIN_GREEN) {
+            score_add(&score, 10);
+            printf("Pièce verte ramassée ! +10 points\n");
+        } else if (pickup_result == PICKUP_COIN_YELLOW) {
+            score_add(&score, 25);
+            printf("Pièce jaune ramassée ! +25 points\n");
+        } else {
+            // C'est un bonus/malus
+            player_apply_bonus(&player, pickup_result, &lives);
+        }
+    }
     
     /* ---- enemy logic ---- */
     enemy_update(&game->enemies, 800);
@@ -133,7 +161,10 @@ void game_render(Game *game) {
     enemy_render(&game->enemies, game->renderer);
     
     /* ---- Dessiner les bullets ----*/
-    bullet_render(bullets, MAX_BULLETS, game->renderer, score.value);
+    bullet_render(bullets, MAX_BULLETS, game->renderer, player.bullet_level);
+
+    /* ---- Dessiner les pickups ----*/
+    pickup_render(&game->pickups, game->renderer);
 
     /* ---- Afficher le score  ----*/
     score_render(&score, game->renderer);
