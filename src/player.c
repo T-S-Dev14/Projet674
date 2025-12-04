@@ -2,9 +2,15 @@
 #include "bullet.h"
 #include "pickup.h"
 #include "lives.h"
+#include "hps_button.h"      // NOUVEAU
+#include "DE1-SoC_I2C.h"     // NOUVEAU
 
 // Déclaration externe du sprite manager global
 extern SpriteManager *g_sprite_manager;
+
+// Seuils pour l'accéléromètre (à ajuster selon vos tests)
+#define ACCEL_THRESHOLD 0.15f  // Seuil de détection d'inclinaison
+#define ACCEL_MAX 1.0f         // Valeur max pour normaliser
 
 void player_init(Player *p, int screenWidth, int screenHeight) {
     p->x = screenWidth / 2;
@@ -19,6 +25,57 @@ void player_init(Player *p, int screenWidth, int screenHeight) {
     p->speed_multiplier = 1.0f;
     p->speed_bonus_end = 0;
     p->slow_debuff_end = 0;
+}
+
+void player_update_with_accel(Player *p) {
+    // Gérer les effets temporaires
+    Uint32 current_time = SDL_GetTicks();
+    
+    if (current_time > p->speed_bonus_end) {
+        p->speed_multiplier = 1.0f;
+    }
+    if (current_time > p->slow_debuff_end) {
+        p->speed_multiplier = 1.0f;
+    }
+    
+    // Vitesse effective
+    int effective_speed = (int)(p->speed * p->speed_multiplier);
+    
+    // Lire l'accéléromètre (axe X pour gauche/droite)
+    float accel_x = read_accel_x();
+    
+    // Déplacer le joueur selon l'inclinaison
+    if (accel_x < -ACCEL_THRESHOLD) {
+        // Incliné à gauche
+        float intensity = (-accel_x - ACCEL_THRESHOLD) / (ACCEL_MAX - ACCEL_THRESHOLD);
+        if (intensity > 1.0f) intensity = 1.0f;
+        
+        p->x -= (int)(effective_speed * intensity);
+        p->current_sprite = VAISSEAU_2;
+    }
+    else if (accel_x > ACCEL_THRESHOLD) {
+        // Incliné à droite
+        float intensity = (accel_x - ACCEL_THRESHOLD) / (ACCEL_MAX - ACCEL_THRESHOLD);
+        if (intensity > 1.0f) intensity = 1.0f;
+        
+        p->x += (int)(effective_speed * intensity);
+        p->current_sprite = VAISSEAU_3;
+    }
+    else {
+        // Position neutre
+        p->current_sprite = VAISSEAU_1;
+    }
+    
+    // Limiter aux bords
+    if (p->x < 0) p->x = 0;
+    if (p->x > 776) p->x = 776; // 800 - 24
+
+    // Animation de la flamme
+    p->flame_timer++;
+    if (p->flame_timer >= 10) {
+        p->flame_frame = (p->flame_frame + 1) % 3;
+        p->flame_timer = 0;
+    }
 }
 
 void player_update(Player *p, const Uint8 *keystates) {
@@ -83,6 +140,35 @@ void player_render(Player *p, SDL_Renderer *renderer) {
         SDL_RenderFillRect(renderer, &rect);
     }
 }
+
+void player_handle_shooting_hps(Player *p, Bullet bullets[], int score) {
+    static int prev_button = 0;
+    int button = hps_button_is_pressed();
+    
+    // Détection front montant (bouton vient d'être appuyé)
+    if (button && !prev_button) {
+        int damage;
+        
+        switch (p->bullet_level) {
+            case 0:
+                damage = 5;  // BALLES_1
+                break;
+            case 1:
+                damage = 8;  // BALLES_2
+                break;
+            case 2:
+                damage = 10; // BALLES_3
+                break;
+            default:
+                damage = 5;
+        }
+        
+        bullet_shoot(bullets, MAX_BULLETS, p->x + 4, p->y, damage);
+    }
+    
+    prev_button = button;
+}
+
 
 void player_handle_shooting(Player *p, const Uint8 *keys, Bullet bullets[], int score) {
     static int prev_space = 0;

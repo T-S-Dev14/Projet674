@@ -5,6 +5,8 @@
 #include "text.h"
 #include "lives.h"
 #include "pickup.h"
+#include "hps_button.h"
+#include "DE1-SoC_I2C.h"
 
 /* === configuration générale === */
 #define CHEMIN_VERS_POLICE "assets/space_invaders.ttf"
@@ -41,6 +43,20 @@ int main() {
         printf("Erreur chargement de la police pour texte\n");
         return 1;
     }
+
+    if (init_accel() < 0) {
+        fprintf(stderr, "Erreur: impossible d'initialiser l'accéléromètre\n");
+        return 1;
+    }
+    printf("Accéléromètre initialisé\n");
+    
+    // NOUVEAU : Initialiser le bouton HPS
+    if (hps_button_init() < 0) {
+        fprintf(stderr, "Erreur: impossible d'initialiser le bouton HPS\n");
+        fprintf(stderr, "Assurez-vous d'exécuter avec sudo\n");
+        return 1;
+    }
+    printf("Bouton HPS initialisé\n");
     
     lives_init(&lives);
 
@@ -63,10 +79,13 @@ int main() {
         const Uint8 *keystates = SDL_GetKeyboardState(NULL);
 
         /** --- mise à jour du joueur --- */
-        player_update(&player, keystates);
+        //player_update(&player, keystates);
+        player_update_with_accel(&player);
+        
 
         /** --- gestion de tir du joueur --- */
-        player_handle_shooting(&player, keystates, bullets, score.value);
+        //player_handle_shooting(&player, keystates, bullets, score.value);
+        player_handle_shooting_hps(&player, bullets, score.value);
 
         /** --- mise à jour globale du jeu --- */
         game_update(&game);
@@ -83,6 +102,7 @@ int main() {
     score_cleanup(&score);
     text_cleanup(&textJeu);
     game_cleanup(&game);
+    hps_button_cleanup();
 
     return 0;
 }

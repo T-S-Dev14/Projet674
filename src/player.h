@@ -25,5 +25,6 @@ void player_update(Player *p, const Uint8 *keystates);
 void player_render(Player *p, SDL_Renderer *renderer);
 void player_handle_shooting(Player *p, const Uint8 *keys, Bullet bullets[], int score);
 void player_apply_bonus(Player *p, int bonus_type, Lives *lives);
-
+void player_update_with_accel(Player *p);
+void player_handle_shooting_hps(Player *p, Bullet bullets[], int score);
 #endif
