@@ -5,8 +5,8 @@
 #include <SDL2/SDL_ttf.h>
 
 #define MAX_NAME_LENGTH 20
-#define MAX_HIGHSCORES 10
-#define HIGHSCORE_FILE "highscores.txt"
+#define MAX_HIGHSCORES 5
+#define HIGHSCORE_FILE "src/highscores.txt"
 
 /* Structure pour un score */
 typedef struct {

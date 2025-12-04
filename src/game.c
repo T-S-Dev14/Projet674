@@ -196,6 +196,21 @@ void game_update(Game *game) {
         
         game->state = GAME_STATE_GAME_OVER;  // ← Changement d'état
         
+        for (int i = 0; i < MAX_BULLETS; i++) {
+            bullets[i].active = 0;
+        }
+        
+        // Tuer tous les ennemis
+        for (int i = 0; i < game->enemies.count; i++) {
+            game->enemies.enemies[i].alive = 0;
+        }
+        game->enemies.alive_count = 0;
+        
+        lives.danger_warning = 0;
+        // Effacer le texte de transition
+        text_clear(&textJeu);
+    
+        
         // Enregistrer le score
         if (highscore_is_new_highscore(&game->highscores, score.value)) {
             printf("🎉 NOUVEAU HIGHSCORE!\n");
