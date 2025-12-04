@@ -15,7 +15,7 @@ extern SpriteManager *g_sprite_manager;
 void player_init(Player *p, int screenWidth, int screenHeight) {
     p->x = screenWidth / 2;
     p->y = screenHeight - 50;
-    p->speed = 5;
+    p->speed = 20;
     p->current_sprite = VAISSEAU_1;
     p->flame_frame = 0;
     p->flame_timer = 0;
