@@ -1,4 +1,4 @@
-#include "de1_io.h"
+#include "DE1-SoC_IO.h"
 #include <fcntl.h>
 #include <sys/mman.h>
 #include <unistd.h>

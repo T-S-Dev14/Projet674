@@ -1,4 +1,4 @@
-#include "i2c.h"
+#include "DE1-SoC_I2C.h"
 #include <stdio.h>
 #include <fcntl.h>
 #include <unistd.h>
