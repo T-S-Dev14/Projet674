@@ -124,7 +124,7 @@ void enemy_spawn_one(EnemyGrid *grid, int screenWidth) {
     int y = -50;  // Commence au-dessus de l'écran
     
     // Vitesse de base augmente avec les vagues
-    float base_speed = 0.5f + (grid->wave_number * 0.3f);
+    float base_speed = 0.75f + (grid->wave_number * 0.3f);
     
     int spawn_asteroid = 0;
     
@@ -201,6 +201,7 @@ void enemy_update(EnemyGrid *grid, int screenWidth) {
         
         Enemy *e = &grid->enemies[i];
         e->y += e->speed;  // Descendre verticalement
+        //printf("\nspeed of enemy [%d] :%f",i, e->speed);
     }
 }
 
