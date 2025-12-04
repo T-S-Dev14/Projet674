@@ -21,13 +21,14 @@ int lives_check_danger(Lives *lives, EnemyGrid *enemies, int screenHeight) {
         if (!enemies->enemies[i].alive) continue;
         
         Enemy *e = &enemies->enemies[i];
+        int enemy_y = (int)e->y;  // AJOUTER CETTE CONVERSION
         
         // Vérifier si l'ennemi est dans la zone de danger
-        if (e->y >= DANGER_THRESHOLD) {
+        if (enemy_y >= DANGER_THRESHOLD) {
             lives->danger_warning = 1;  // Activer l'alerte
             
             // Vérifier si l'ennemi a atteint le fond complet
-            if (e->y + e->height >= screenHeight - 60) {
+            if (enemy_y + e->height >= screenHeight - 60) {
                 // Vérifier l'invincibilité
                 Uint32 current_time = SDL_GetTicks();
                 if (current_time - lives->last_hit_time > lives->invincibility_time) {

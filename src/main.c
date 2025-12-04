@@ -27,6 +27,8 @@ int main() {
         return 1;
     }
 
+    SDL_StartTextInput();
+
     /** === initialisation du score === */
     if (!score_init(&score, CHEMIN_VERS_POLICE, 24)) {
         printf("Erreur chargement de la police pour score\n");
@@ -75,7 +77,8 @@ int main() {
         /** --- régulation de la vitesse du jeu --- */
         SDL_Delay(16); // ~60 FPS
     }
-
+    
+    SDL_StopTextInput();
      /** === nettoyage avant fermeture === */
     score_cleanup(&score);
     text_cleanup(&textJeu);

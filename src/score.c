@@ -3,8 +3,7 @@
 
 int score_init(Score *score, const char *fontPath, int fontSize) {
 
-    if (TTF_Init() < 0)
-        return 0;
+    
 
     score->font = TTF_OpenFont(fontPath, fontSize);
     if (!score->font)
@@ -38,5 +37,5 @@ void score_render(Score *score, SDL_Renderer *renderer) {
 
 void score_cleanup(Score *score) {
     TTF_CloseFont(score->font);
-    TTF_Quit();
+    
 }

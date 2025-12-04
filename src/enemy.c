@@ -128,7 +128,7 @@ void enemy_spawn_one(EnemyGrid *grid, int screenWidth) {
     int y = -50;  // Commence au-dessus de l'écran
     
     // Vitesse de base augmente avec les vagues
-    float base_speed = 0.5f + (grid->wave_number * 0.3f);
+    float base_speed = 1.0f + (grid->wave_number * 0.3f);
     
     int spawn_asteroid = 0;
     
@@ -201,6 +201,7 @@ void enemy_update(EnemyGrid *grid, int screenWidth) {
     
     // Déplacer tous les ennemis vivants
     for (int i = 0; i < grid->count; i++) {
+       //printf("nombre %d ennemie %d \n", i, grid->enemies[i].speed);
         if (!grid->enemies[i].alive) continue;
         
         Enemy *e = &grid->enemies[i];
@@ -214,6 +215,8 @@ void enemy_render(EnemyGrid *grid, SDL_Renderer *renderer) {
         if (!grid->enemies[i].alive) continue;
         
         Enemy *e = &grid->enemies[i];
+        int render_x = (int)e->x;
+        int render_y = (int)e->y;
         
         if (g_sprite_manager) {
             // Choisir le sprite selon le type et l'animation
@@ -268,13 +271,13 @@ void enemy_render(EnemyGrid *grid, SDL_Renderer *renderer) {
                     scale = 3;
             }
             
-            renderSprite(g_sprite_manager, renderer, sprite, e->x, e->y, scale);
+            renderSprite(g_sprite_manager, renderer, sprite, render_x, render_y, scale);
             
             if (e->hp < e->max_hp) {
                 int bar_width = e->width;
                 int bar_height = 6;  // Barre plus épaisse
-                int bar_x = e->x;
-                int bar_y = e->y - 10;  // 10px au-dessus
+                int bar_x = render_x;
+                int bar_y = render_y - 10;  // 10px au-dessus
                 
                 // Barre de fond (rouge)
                 SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255);
@@ -302,7 +305,7 @@ void enemy_render(EnemyGrid *grid, SDL_Renderer *renderer) {
                 SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255);    // Rouge
             }
             
-            SDL_Rect rect = {e->x, e->y, e->width, e->height};
+            SDL_Rect rect = {render_x, render_y, e->width, e->height};
             SDL_RenderFillRect(renderer, &rect);
         }
     }
@@ -314,12 +317,15 @@ int enemy_check_collision(EnemyGrid *grid, int x, int y, int width, int height, 
         if (!grid->enemies[i].alive) continue;
         
         Enemy *e = &grid->enemies[i];
+
+        int enemy_x = (int)e->x;
+        int enemy_y = (int)e->y;
         
         // AABB collision detection
-        if (x < e->x + e->width &&
-            x + width > e->x &&
-            y < e->y + e->height &&
-            y + height > e->y) {
+        if (x < enemy_x+ e->width &&
+            x + width > enemy_x &&
+            y < enemy_y + e->height &&
+            y + height > enemy_y) {
             
             // Infliger des dégâts
             e->hp -= damage;
