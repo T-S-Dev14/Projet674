@@ -5,82 +5,84 @@
 #include <unistd.h>
 #include <stdint.h>
 
-// Adresses physiques pour le HPS
-#define HPS_LW_BRIDGE_BASE 0xFF200000  // Lightweight HPS-to-FPGA bridge base
-#define HPS_LW_BRIDGE_SPAN 0x00200000  // Taille de la bridge
+// Adresses pour le HPS
+#define HPS_GPIO1_BASE 0xFF709000  // Base GPIO1 (contient HPS_KEY)
+#define GPIO_SPAN 0x1000
 
-// Offset pour les boutons HPS (KEY)
-#define KEY_BASE 0x00000050  // Offset relatif à la bridge
+// Offsets des registres GPIO
+#define GPIO_SWPORTA_DR  0x00  // Data register
+#define GPIO_SWPORTA_DDR 0x04  // Direction register
+#define GPIO_EXT_PORTA   0x50  // External port register (lecture)
 
-// Masques pour les boutons (KEY0-KEY3)
-#define KEY0_MASK 0x01
-#define KEY1_MASK 0x02
-#define KEY2_MASK 0x04
-#define KEY3_MASK 0x08
+// HPS_KEY est connecté à GPIO1[25]
+#define HPS_KEY_MASK (1 << 25)
 
 int main() {
     int fd;
-    void *lw_bridge_map;
-    volatile uint32_t *key_ptr;
-    uint32_t key_value, previous_value = 0;
+    void *gpio_map;
+    volatile uint32_t *gpio_ddr_ptr;
+    volatile uint32_t *gpio_ext_ptr;
+    uint32_t previous_state = 1;
     
-    // Ouvrir /dev/mem pour accéder à la mémoire physique
+    printf("=== Lecture du bouton HPS_KEY (bouton utilisateur) ===\n");
+    printf("Localisation: bouton marqué 'HPS_KEY' ou 'KEY' sur la carte\n");
+    printf("(à côté des boutons RESET)\n\n");
+    
+    // Ouvrir /dev/mem
     if ((fd = open("/dev/mem", O_RDWR | O_SYNC)) == -1) {
         perror("Erreur: impossible d'ouvrir /dev/mem");
-        printf("Assurez-vous d'exécuter avec sudo\n");
+        printf("Exécutez avec: sudo ./buttons_hps\n");
         return 1;
     }
     
-    // Mapper la lightweight bridge en mémoire virtuelle
-    lw_bridge_map = mmap(NULL, HPS_LW_BRIDGE_SPAN, 
-                         PROT_READ | PROT_WRITE, MAP_SHARED, 
-                         fd, HPS_LW_BRIDGE_BASE);
+    // Mapper GPIO1 en mémoire
+    gpio_map = mmap(NULL, GPIO_SPAN, 
+                    PROT_READ | PROT_WRITE, MAP_SHARED, 
+                    fd, HPS_GPIO1_BASE);
     
-    if (lw_bridge_map == MAP_FAILED) {
+    if (gpio_map == MAP_FAILED) {
         perror("Erreur: mmap a échoué");
         close(fd);
         return 1;
     }
     
-    // Pointer vers le registre des boutons
-    key_ptr = (uint32_t *)(lw_bridge_map + KEY_BASE);
+    // Pointeurs vers les registres
+    gpio_ddr_ptr = (uint32_t *)(gpio_map + GPIO_SWPORTA_DDR);
+    gpio_ext_ptr = (uint32_t *)(gpio_map + GPIO_EXT_PORTA);
     
-    printf("=== Lecture des boutons HPS DE1-SoC ===\n");
-    printf("Appuyez sur les boutons KEY0-KEY3\n");
-    printf("Appuyez sur Ctrl+C pour quitter\n\n");
+    // Configurer le pin en entrée (bit à 0 dans DDR)
+    uint32_t ddr_value = *gpio_ddr_ptr;
+    ddr_value &= ~HPS_KEY_MASK;  // Mettre le bit 25 à 0 (entrée)
+    *gpio_ddr_ptr = ddr_value;
     
-    // Boucle de lecture des boutons
+    printf("Configuration GPIO réussie\n");
+    printf("Appuyez sur le bouton HPS_KEY\n");
+    printf("Ctrl+C pour quitter\n\n");
+    
+    int press_count = 0;
+    
+    // Boucle de lecture
     while (1) {
-        // Lire la valeur des boutons
-        key_value = *key_ptr;
+        // Lire l'état du bouton
+        uint32_t gpio_value = *gpio_ext_ptr;
+        uint32_t button_state = (gpio_value & HPS_KEY_MASK) >> 25;
         
-        // Les boutons sont actifs à 0 (appuyés = 0, relâchés = 1)
-        // On inverse pour avoir une logique plus intuitive
-        key_value = ~key_value & 0x0F;
-        
-        // Afficher uniquement si l'état a changé
-        if (key_value != previous_value) {
-            printf("État des boutons: ");
-            
-            if (key_value & KEY0_MASK) printf("KEY0 ");
-            if (key_value & KEY1_MASK) printf("KEY1 ");
-            if (key_value & KEY2_MASK) printf("KEY2 ");
-            if (key_value & KEY3_MASK) printf("KEY3 ");
-            
-            if (key_value == 0) {
-                printf("Aucun bouton appuyé");
-            }
-            
-            printf("\n");
-            previous_value = key_value;
+        // Le bouton est actif à 0 (appuyé = 0, relâché = 1)
+        if (button_state == 0 && previous_state == 1) {
+            press_count++;
+            printf("🔘 BOUTON APPUYÉ ! (pression #%d)\n", press_count);
+        } else if (button_state == 1 && previous_state == 0) {
+            printf("   Bouton relâché\n");
         }
         
-        // Petit délai pour éviter une utilisation CPU excessive
+        previous_state = button_state;
+        
+        // Délai pour éviter une utilisation CPU excessive
         usleep(10000); // 10ms
     }
     
-    // Nettoyage (code jamais atteint dans cette version)
-    munmap(lw_bridge_map, HPS_LW_BRIDGE_SPAN);
+    // Nettoyage
+    munmap(gpio_map, GPIO_SPAN);
     close(fd);
     
     return 0;
